@@ -7,6 +7,7 @@ import * as THREE from "three";
 import vertex from "../shaders/vertex.glsl";
 import gsap from "gsap";
 import Plane from "./Plane";
+import Loader from "./Loader";
 
 function Marble({ setBloom }) {
   const { scene, nodes } = useGLTF("/marble.glb");
@@ -182,18 +183,23 @@ function Marble({ setBloom }) {
 useGLTF.preload("/marble.glb");
 
 function App() {
-  return (
-    <Canvas
-      style={{ height: "100vh", width: "100vw", backgroundColor: "black" }}
-      // camera={{ position: [1, 0.4, 1.3]  }}
-      camera={{ position: [0, 0, 5] }}
-    >
-      <Plane />
-      <Environment preset="city" />
-      <OrbitControls />
+  const [loaded, setLoaded] = useState(false);
 
-      <Marble setBloom={0.0} />
-    </Canvas>
+  return (
+    <>
+      {!loaded && <Loader onComplete={() => setLoaded(true)} />}{" "}
+      <Canvas
+        style={{ height: "100vh", width: "100vw", backgroundColor: "black" }}
+        // camera={{ position: [1, 0.4, 1.3]  }}
+        camera={{ position: [0, 0, 5] }}
+      >
+        <Plane />
+        <Environment preset="city" />
+        <OrbitControls />
+
+        <Marble setBloom={0.0} />
+      </Canvas>
+    </>
   );
 }
 
