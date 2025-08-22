@@ -6,12 +6,14 @@ import CustomShaderMaterial from "three-custom-shader-material";
 import * as THREE from "three";
 import vertex from "../shaders/vertex.glsl";
 import gsap from "gsap";
+import Plane from "./Plane";
 
-function Marble() {
+function Marble({ setBloom }) {
   const { scene, nodes } = useGLTF("/marble.glb");
   const { raycaster, camera } = useThree();
   const mouse = useRef(new THREE.Vector3());
   const meshRef = useRef();
+  const GroupRef = useRef();
 
   const [mouseMove, setMouseMove] = useState(false);
 
@@ -25,6 +27,24 @@ function Marble() {
     }),
     []
   );
+
+  useFrame(() => {
+    if (!GroupRef) return;
+
+    const targetX = -mouse.current.y * 0.1;
+    const targetY = mouse.current.x * 0.5;
+
+    GroupRef.current.rotation.x = THREE.MathUtils.lerp(
+      GroupRef.current.rotation.x,
+      targetX,
+      0.05
+    );
+    GroupRef.current.rotation.y = THREE.MathUtils.lerp(
+      GroupRef.current.rotation.y,
+      targetY,
+      0.05
+    );
+  });
 
   // 🔹 build outer geometry only once
   const model = useMemo(() => {
@@ -114,10 +134,11 @@ function Marble() {
     scene.traverse((child) => {
       if (child instanceof Mesh) {
         child.material = new MeshPhysicalMaterial({
-          color: "#FFD700",
+          color: "black",
           metalness: 1,
           roughness: 0.4,
           clearcoat: 1,
+          flatShading: true,
           clearcoatRoughness: 0.05,
         });
       }
@@ -126,7 +147,7 @@ function Marble() {
   }, [scene]);
 
   return (
-    <group>
+    <group ref={GroupRef} position={[0, 0, 0]} scale={3}>
       {/* Inside = original model */}
       <primitive object={scene} />
 
@@ -142,10 +163,10 @@ function Marble() {
             baseMaterial={THREE.MeshPhysicalMaterial}
             vertexShader={vertex}
             uniforms={uniforms}
-            color={"black"}
             metalness={1.0}
             // wireframe
-            roughness={0.25}
+            color={"#FFD700"}
+            roughness={0.0}
             clearcoat={1.0}
             clearcoatRoughness={0.1}
             polygonOffset={true}
@@ -158,18 +179,20 @@ function Marble() {
   );
 }
 
-
 useGLTF.preload("/marble.glb");
 
 function App() {
   return (
     <Canvas
       style={{ height: "100vh", width: "100vw", backgroundColor: "black" }}
-      camera={{ position: [1, 0.4, 1.3] }}
+      // camera={{ position: [1, 0.4, 1.3]  }}
+      camera={{ position: [0, 0, 5] }}
     >
+      <Plane />
       <Environment preset="city" />
       <OrbitControls />
-      <Marble />
+
+      <Marble setBloom={0.0} />
     </Canvas>
   );
 }
